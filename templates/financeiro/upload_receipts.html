@@ -1,0 +1,50 @@
+{% load static %}
+
+<html lang="pt-br" >
+<head>
+    <title>CSA Barbetta</title>
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/dashboard.css">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.js"></script>
+
+    <style media="screen">
+    @media only screen and (max-width: 600px) {
+        #container {width: 100%;}
+    }
+    </style>
+</head>
+
+<body class=" dashboard" data-admin-utc-offset="-10800">
+<!-- Container -->
+<div id="container">
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+            <h1 id="site-name"><a href="/admin/">CSA Barbetta - Extrato de Pagamentos</a></h1>
+        </div>
+    </div>
+    <!-- END Header -->
+
+    <!-- Content -->
+    <div id="content">
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="myfile">
+        <button type="submit">Processar</button>
+      </form>
+
+      {% if uploaded_file_url %}
+        <p style="color:#FFF !important;">File uploaded at: <a style="color: #FFF;" href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
+
+        <h2>Resultado da importação:</h2>
+
+        <pre>{% for result in results %}<span>{{ result }}</span><br>{% endfor %}</pre>
+      {% endif %}
+
+  </div>
+</div>
+</body>

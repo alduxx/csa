@@ -1,0 +1,5 @@
+*.sqlite3
+*.pyc
+/media
+/scripts
+csa/settings.py
