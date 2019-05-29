@@ -3,3 +3,4 @@
 /media
 /scripts
 csa/settings.py
+csa/settings_prod.py

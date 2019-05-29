@@ -32,7 +32,7 @@ def extrato(request):
     Gera o extrato
     """
     ciclo_atual = Ciclo.objects.get(ativo=True)
-    lista_coag = CoagricultorPorCiclo.objects.filter(ciclo=ciclo_atual)[0:3]
+    lista_coag = CoagricultorPorCiclo.objects.filter(ciclo=ciclo_atual)
 
     valor_cesta_mes = dict()
     qtde_por_cesta = dict()
