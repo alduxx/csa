@@ -1,5 +1,7 @@
-from django.db import models
 import locale
+
+from django.db import models
+from django.utils.formats import localize
 
 
 class Registro(models.Model):
@@ -16,7 +18,7 @@ class Registro(models.Model):
 
     @property
     def valor_formatado(self):
-        locale.setlocale(locale.LC_ALL, 'pt_BR')
+        locale.setlocale(locale.LC_ALL, '')
         valor = locale.currency(self.valor, grouping=True, symbol=True)
         return valor
 
@@ -24,7 +26,7 @@ class Registro(models.Model):
 
     @property
     def saldo_no_dia_formatado(self):
-        locale.setlocale(locale.LC_ALL, 'pt_BR')
+        locale.setlocale(locale.LC_ALL, '')
         valor = locale.currency(self.saldo_no_dia, grouping=True, symbol=True)
         return valor
 

@@ -58,15 +58,19 @@ class CestaAdmin(admin.ModelAdmin):
         Filtra para mostrar resultados apenas do ciclo ativo
         """
         if db_field.name == "coagricultor":
-            kwargs["queryset"] = CoagricultorPorCiclo.objects.filter(ciclo__ativo=True)
+            kwargs["queryset"] = CoagricultorPorCiclo.objects.filter(
+                                                        ciclo__ativo=True
+                                        #ciclo__ativo=self.coagricultor.ciclo
+                                                                    )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     model = Cesta
-    list_display = ['coagricultor_nome', 'versao', 'ciclo_nome']
+    list_display = ['coagricultor_nome', 'versao', 'valor_total', 'ciclo_nome']
     inlines = [ItemDaCestaInline]
     ordering = ['coagricultor__coagricultor__nome', 'coagricultor__ciclo','versao']
     #list_filter = [FirstLetterListFilter, 'coagricultor__ciclo', 'coagricultor__coagricultor__nome']
     list_filter = ['coagricultor__ciclo', 'coagricultor__coagricultor__nome']
+    readonly_fields = ['valor_total']
 
 admin.site.register(Cesta, CestaAdmin)
 

@@ -36,8 +36,10 @@ def processa_linha(cnt, linha):
         if(historico not in IGNORAR_STATUS):
             origem = linha[50:56].strip()
             num_doc = int(linha[60:71].replace('.', ''))
-            valor = float(linha[73:87].replace(',', '#').replace('.', '').replace('#', '.'))
-            saldo_no_dia = float(linha[89:].replace(',', '#').replace('.', '').replace('#', '.'))
+            valor = float(linha[73:87].replace(',', '#').replace('.', '') \
+                                      .replace('#', '.'))
+            saldo_no_dia = float(linha[89:].replace(',', '#').replace('.', '') \
+                                           .replace('#', '.'))
             _txt = data+historico+origem+str(num_doc)+str(valor)+str(saldo_no_dia)
             # retorno = f"data: {data} | hist: {historico} | orig: {origem} | num: {num_doc} | vlr: {valor} | sld: {saldo_no_dia}"
             retorno = f"{dia}.{mes}.{ano}   {historico:28} {origem: >6} {num_doc: >11}  {valor: >14}"

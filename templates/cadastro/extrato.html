@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
     <meta name="robots" content="NONE,NOARCHIVE">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style media="screen">
     @media only screen and (max-width: 600px) {
@@ -23,7 +24,15 @@
     }
     .status_filtro .pos {color: blue;}
     .status_filtro .neg {color: red;}
+    .esq {text-align: left;}
+    .dir {text-align: right;}
+    .ctr {text-align: center;}
 
+    .destaque-linha {background-color: #eaf8ff;}
+    .destaque-total {background-color: #f6f6f6;font-weight: bold;}
+    .destaque-total .icone {color:green;font-weight: normal;}
+
+    .icone {font-size:16px;color: #999;}
     </style>
 
     <script type="text/javascript">
@@ -45,26 +54,68 @@
         }
 
         $(document).ready(function(){
-            qtde_meses = {{qtde_meses}};
-            json_qtde_por_cesta = {{json_qtde_por_cesta|safe}};
+            mes_inicial = parseInt("{{ ciclo_atual.data_inicio | date:'m' }}");
+            mes_atual = {{ hoje|date:'n' }}
 
-            $(".pagamentos").each(function(k, v){
-                versao = $(this).attr("rel");
-                total = 0
-                $(this).find("td.pagamentos_registro").each(function(k,v){
-                    parcial = parseInt( $(v).text().replace(',','') )
-                    total += parcial;
+            $(".divcoag").each(function(){
+                /* loop tabela cestas*/
+                $cesta = $(this).find("table.cesta");
+                qtde_meses = 1;
+                total_devido = 0
+                $cesta.find("tbody > tr").each(function(i){
+                    _mes = i+mes_inicial;
+                    _mes = _mes <= 12 ? _mes : _mes - 12;
+                    $(this).find("td:first-child").text( String(_mes).length < 2 ? "0"+_mes : _mes );
+                    if(_mes <= mes_atual){
+                        total_devido += Number($(this).find("td:last-child").text().replace(',','.'))
+                        $(this).addClass("destaque-linha")
+                    }
+                    qtde_meses=i;
                 });
-                $tab_cesta = $("#"+versao)
-                valor_cesta = parseInt($($tab_cesta.find(".devido_cesta")[0]).text().replace(',',''));
-                multiplicador = json_qtde_por_cesta[ $($tab_cesta.find(".devido_cesta")[0]).attr("rel") ]
-                total_devido_cesta = multiplicador * valor_cesta;
 
-                $(this).find("td.pagamentos_total").text(formatReal(total));
-                $(this).find("td.devido_total").text(formatReal(total_devido_cesta));
-                diff = total - total_devido_cesta
-                $(this).find("td.diferenca").text(diff==0 ? "0,00" : formatReal(diff));
-            })
+                /* loop tabela pagamentos*/
+                $pagamentos = $(this).find("table.pagamentos");
+                qtde_linhas = $pagamentos.find("tbody > tr").length;
+
+                $pagamentos.find("tbody > tr").addClass("destaque-linha");
+                while(qtde_linhas <= qtde_meses){
+                     $linha = $pagamentos.find("tbody").append($("<tr><td class='ctr'>-</td><td class='ctr'>-</td></tr>"));
+                     $linha.removeClass("destaque-linha")
+                    qtde_linhas++;
+                }
+
+                /* loop tabela conciliacao*/
+                $conciliacao = $(this).find("table.conciliacao");
+                cont_lin = 0
+                total_cesta = 0
+                total_pago = 0
+                while(cont_lin <= qtde_meses){
+                    classe = ""
+                    icone = "&nbsp;";
+                    _mes = cont_lin+mes_inicial;
+                    _mes = _mes <= 12 ? _mes : _mes - 12;
+
+                    _cesta = Number( $($cesta.find("tbody > tr")[cont_lin]).find("td:last-child").text().replace(',','.') );
+                    _pagamento = Number( $($pagamentos.find("tbody > tr")[cont_lin]).find("td:last-child").text().replace(',', '.') );
+                    if(_cesta == _pagamento){
+                        icone = "<i class='material-icons icone'>done</i>"
+                    }
+
+                    if(_mes <= mes_atual){
+                        total_cesta += _cesta;
+                        total_pago += _pagamento;
+                        classe = 'destaque-linha'
+                    }
+
+                    $linha = $conciliacao.find("tbody").append($("<tr class='" + classe + "'><td>" + icone + "</td></tr>"));
+                    cont_lin++;
+                }
+                $cesta.find("tbody").append("<tr class='destaque-total'><td class='dir' colspan='3'>" + total_cesta + "</td></tr>");
+                $pagamentos.find("tbody").append("<tr class='destaque-total'><td colspan='2' class='dir'>" + total_pago + "</td></tr>");
+                icone = "<i class='material-icons icone'>" + (total_pago == total_cesta ? "done" : "cancel") + "</i>"
+                $conciliacao.find("tbody").append("<tr class='destaque-total'><td class='ctr'>" + icone + "</td></tr>");
+
+            });
 
             $("#todos").click(function(){
                 $(".divcoag").show();
@@ -77,7 +128,6 @@
                     $id = $(this).attr("id");
                     diferenca = $(this).find(".diferenca").text();
                     diferenca = parseFloat(diferenca.replace(',', '.'));
-                    console.log($id, diferenca);
                     if(diferenca < 0) {
                         $(this).show();
                         cont++;
@@ -94,7 +144,6 @@
                     $id = $(this).attr("id");
                     diferenca = $(this).find(".diferenca").text();
                     diferenca = parseFloat(diferenca.replace(',', '.'));
-                    console.log($id, diferenca);
                     if(diferenca > 0) {
                         $(this).show();
                         cont++;
@@ -124,7 +173,7 @@
     <!-- Content -->
     <div id="content">
         <div>
-            <h1>Extrato - {{ciclo_atual}}</h1>
+            <h1>Extrato - {{ciclo_atual}} - {{hoje|date:'F/Y'}}</h1>
 
             <ul class="object-tools">
                 <li><a href="#" id="todos" class="historylink">Todos</a></li>
@@ -137,45 +186,63 @@
             </div>
 
             {% for coag in lista_coag %}
-                <div class="divcoag" id="divcoag_{{ coag.coagricultor.identificador }}">
+                <div class="divcoag" id="divcoag_{{ coag.coagricultor.identificador }}" style="margin-bottom: 30px;">
                     <h2>{{coag.coagricultor.nome}}</h2>
-                    {% for cesta_do_mes in coag.get_itens.all %}
-                        {% ifchanged %}
-                            <h3>Cesta Versão {{cesta_do_mes.cesta.versao}}</h3>
-                            <table style="width:100%;" id="cesta_{{coag.coagricultor.identificador}}_{{cesta_do_mes.cesta.versao}}">
-                                <head>
-                                    <tr><th>Produto</th><th style="text-align:right;">Valor</th></tr>
-                                </head>
-                                <body>
-                                {% for prod in cesta_do_mes.cesta.get_itens.all %}
-                                    <tr><td>{{prod}}</td><td style="text-align:right;">{{prod.produto.valor}}</td></tr>
-                                {% endfor %}
-                                    <tr style="font-weight:bold;background-color:#EEEEFF">
-                                        <td>Total Cesta:</td>
-                                        <td style="text-align:right;" class="devido_cesta" rel="{{coag.coagricultor.identificador}}_{{cesta_do_mes.cesta.versao}}">{{cesta_do_mes.cesta.get_valor_total_no_ciclo}}</td>
-                                    </tr>
-                                </body>
-                            </table>
-                            <h3>Pagamentos</h3>
-                            <table style="width:100%;" class="pagamentos" rel="cesta_{{coag.coagricultor.identificador}}_{{cesta_do_mes.cesta.versao}}">
-                                <head>
-                                    <tr><th>Data</th><th style="text-align:right;">Valor</th></tr>
-                                </head>
-                                <body>
-                                {% for reg in cesta_do_mes.cesta.get_registros_financeiros.all %}
-                                    <tr><td>{{reg.posicao}}</td><td style="text-align:right;" class="pagamentos_registro">{{reg.valor}}</td></tr>
-                                {% endfor %}
-                                    <tr style="font-weight:bold;background-color:#EEEEFF"><td>Total Devido:</td><td style="text-align:right;" class="devido_total"></td></tr>
-                                    <tr style="font-weight:bold;background-color:#DDFFDD"><td>Total Pago:</td><td style="text-align:right;" class="pagamentos_total"></td></tr>
-                                    <tr style="font-weight:bold;background-color:#FFDDDD"><td>Diferença:</td><td style="text-align:right;" class="diferenca"></td></tr>
-                                </body>
-                            </table>
-                        {% endifchanged %}
-                    {% endfor %}
-                    <hr style="margin-top:30px;" />
+                    <table style="float:left;" id="cesta_{{coag.coagricultor.identificador}}_{{cesta_do_mes.cesta.versao}}" class="cesta">
+                        <thead>
+                            <tr>
+                                <th colspan="3" class="ctr">Cesta</th>
+                            </tr>
+                            <tr>
+                                <th>Mês</th>
+                                <th>Versão</th>
+                                <th class="dir">Valor Cesta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for cesta_do_mes in coag.get_itens.all %}
+                            {% ifchanged %}
+                                <tr>
+                                    <td class="ctr">{{ cesta_do_mes.mes }}</td>
+                                    <td class="ctr">{{ cesta_do_mes.cesta.versao }}</td>
+                                    <td class="dir">{{cesta_do_mes.cesta.valor_total}}</td>
+                                </tr>
+                            {% endifchanged %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <table style="float:left;" class="pagamentos">
+                        <thead>
+                            <tr>
+                                <th colspan="2" class="ctr">Pagamento</th>
+                            </tr>
+                            <tr>
+                                <th>Data Pagto</th>
+                                <th class="ctr">Valor Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in coag.get_registros_financeiros %}
+                                <tr>
+                                    <td>{{reg.posicao|date:"d/m/Y"}}</td><td class="dir pagamentos_registro">{{reg.valor}}</td></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2">Nenhum pagamento encontrado</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <table style="float:left;" class="conciliacao">
+                        <thead>
+                            <tr><th>&nbsp;</th></tr>
+                            <tr><th>&nbsp;</th></tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <div style="clear:both;"></div>
                 </div>
+                <hr />
             {% endfor %}
-
         </div>
         <br class="clear">
     </div>
