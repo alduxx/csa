@@ -1,0 +1,163 @@
+<html lang="pt-br" >
+<head>
+    <title>CSA Barbetta</title>
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/dashboard.css">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style media="screen">
+    /*@media only screen and (max-width: 600px) {
+        #container {width: 100%;}
+    }*/
+
+    .dashboard #content {width: 100%;}
+    ul.object-tools {float:none;position:relative;margin-top:0;clear:both;}
+
+    .status_filtro {font-size: 0.8em;color: #555;padding-top: 1.33em;padding-left: 0.5em;clear: both;}
+    .status_filtro .pos {color: blue;}
+    .status_filtro .neg {color: red;}
+    .esq {text-align: left;}
+    .dir {text-align: right;}
+    .ctr {text-align: center;}
+
+    .destaque-linha {background-color: #eaf8ff;}
+    .destaque-total {background-color: #f6f6f6;font-weight: bold;}
+    .destaque-total .icone {font-weight: normal;}
+
+    .icone {font-size:16px;}
+    .ok {color: green;}
+    .notok {color: red;}
+
+    .pago {background-color: #d9ffd1;color: #027c25; }
+    .devedor {background-color: #fccccc;color: #8c0909; }
+
+    </style>
+
+    <script type="text/javascript">
+        var QTDE_MESES = {{qtde_meses}};
+
+        function formatReal( vlr ){
+            if(! isNaN(vlr)){
+                return vlr.toLocaleString('pt-BR')
+            } else {
+                return '####'
+            }
+        }
+
+        var pgtos = [];
+        {% for coag in lista_coag %}
+            var _coag = {};
+            _coag["id"] = {{coag.coagricultor.identificador}};
+
+            var _regs = [];
+            {% for reg in coag.get_registros_financeiros %}
+                var _reg = {};
+                _reg["posicao"] = '{{reg.posicao|date:"d/m/Y"}}';
+                _reg["valor"] = '{{reg.valor}}';
+                _regs.push(_reg)
+            {% endfor %}
+
+            _coag["registros"] = _regs;
+            pgtos.push(_coag);
+        {% endfor %}
+
+        function getCoagFromPgtos(id){
+            for(i = 0; i < pgtos.length; i++){
+                if(pgtos[i].id == id){
+                    return pgtos[i];
+                    break;
+                }
+            }
+        }
+
+
+        $(document).ready(function(){
+            for(m = 0; m < QTDE_MESES; m++){
+                $("#tbl_cestas tbody tr").find("td:eq(" + (m+2) + ")").addClass("devedor");
+            }
+
+            $("#tbl_cestas tbody tr").each(function(){
+                _id = parseInt( $(this).find("td:first-child").text() );
+                _pgtos = getCoagFromPgtos(_id);
+
+                if( _pgtos ){
+                    _regs = _pgtos.registros;
+                    for(i=0; i < _regs.length; i++){
+                        $(this).find("td:eq(" + (i+2) + ")").removeClass("devedor").addClass("pago")
+                    }
+                }
+            })
+        });
+    </script>
+</head>
+
+<body class=" dashboard" data-admin-utc-offset="-10800">
+<!-- Container -->
+<div id="container">
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+            <h1 id="site-name"><a href="/admin/">CSA Barbetta - Extrato de Pagamentos</a></h1>
+        </div>
+    </div>
+    <!-- END Header -->
+
+    <!-- Content -->
+    <div id="content">
+        <div>
+            <h1>Extrato - {{ciclo_atual}} - {{hoje|date:'F/Y'}}</h1>
+
+            <div class="filtros" style="display:none;">
+                <ul class="object-tools">
+                    <li><a href="#" id="todos" class="historylink">Todos</a></li>
+                    <li><a href="#" id="negativos" class="historylink">Negativos</a></li>
+                    <li><a href="#" id="positivos" class="historylink">Positivos</a></li>
+                </ul>
+
+                <div class="status_filtro">
+                    Mostrando todos os coagricultores
+                </div>
+            </div>
+
+            <table style="float:left;width:90%;" id="tbl_cestas" class="cesta">
+                <thead>
+                    <tr>
+                        <th colspan="2" style="background-color:transparent;">&nbsp;</th>
+                        <th colspan="6" class="ctr">Cestas</th>
+                    </tr>
+                    <tr>
+                        <th class="ctr">Id</th>
+                        <th>Nome</th>
+                        <th class="ctr">5</th>
+                        <th class="ctr">6</th>
+                        <th class="ctr">7</th>
+                        <th class="ctr">8</th>
+                        <th class="ctr">9</th>
+                        <th class="ctr">10</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coag in lista_coag %}
+                    <tr>
+                        <td class="ctr">{{ coag.coagricultor.identificador }}</td>
+                        <td class="esq">{{ coag.coagricultor.nome }}</td>
+                        {% for cesta_do_mes in coag.get_itens.all %}
+                            <td class="dir">R$ {{cesta_do_mes.cesta.valor_total}}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br class="clear">
+    </div>
+    <!-- END Content -->
+    <div id="footer"></div>
+</div>
+<!-- END Container -->
+</body>
+</html>

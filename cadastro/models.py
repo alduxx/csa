@@ -160,7 +160,6 @@ class CoagricultorPorCiclo(models.Model):
 
         registros = []
         for valor in distintos:
-            print(valor)
             registros.extend(
                 Registro.objects.filter(
                     valor=valor,

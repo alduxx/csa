@@ -8,5 +8,6 @@ from financeiro import views as fviews
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('recibos/upload/', fviews.upload),
-    path('', views.extrato)
+    path('', views.extrato),
+    path('condensado/', views.extrato_condensado)
 ]

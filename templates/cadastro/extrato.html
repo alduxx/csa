@@ -30,27 +30,20 @@
 
     .destaque-linha {background-color: #eaf8ff;}
     .destaque-total {background-color: #f6f6f6;font-weight: bold;}
-    .destaque-total .icone {color:green;font-weight: normal;}
+    .destaque-total .icone {font-weight: normal;}
 
-    .icone {font-size:16px;color: #999;}
+    .icone {font-size:16px;}
+    .ok {color: green;}
+    .notok {color: red;}
     </style>
 
     <script type="text/javascript">
-        function getMoney( str ){
-            return parseInt( str.replace(/[\D]+/g,'') );
-        }
-
-        function formatReal( int ){
-            var tmp = int+'';
-            tmp = tmp.replace(/([0-9]{2})$/g, ",$1");
-            if( tmp.length > 6 )
-                if(int>=0){
-                    tmp = tmp.replace(/([0-9]{3}),([0-9]{2}$)/g, ".$1,$2");
-                } else {
-                    tmp = tmp.replace(/([0-9]{3}),([0-9]{2}$)/g, "$1,$2");
-                }
-
-            return tmp;
+        function formatReal( vlr ){
+            if(! isNaN(vlr)){
+                return vlr.toLocaleString('pt-BR')
+            } else {
+                return '####'
+            }
         }
 
         $(document).ready(function(){
@@ -77,10 +70,12 @@
                 $pagamentos = $(this).find("table.pagamentos");
                 qtde_linhas = $pagamentos.find("tbody > tr").length;
 
-                $pagamentos.find("tbody > tr").addClass("destaque-linha");
                 while(qtde_linhas <= qtde_meses){
+                    _mes = qtde_linhas + mes_inicial - 1;
                      $linha = $pagamentos.find("tbody").append($("<tr><td class='ctr'>-</td><td class='ctr'>-</td></tr>"));
-                     $linha.removeClass("destaque-linha")
+                    if(_mes < mes_atual){
+                        $pagamentos.find("tbody > tr:last-child").addClass("destaque-linha");
+                    }
                     qtde_linhas++;
                 }
 
@@ -102,17 +97,18 @@
                     }
 
                     if(_mes <= mes_atual){
-                        total_cesta += _cesta;
-                        total_pago += _pagamento;
+                        total_cesta += isNaN(_cesta) ? 0 : _cesta;
+                        total_pago += isNaN(_pagamento) ? 0 : _cesta;
                         classe = 'destaque-linha'
                     }
 
                     $linha = $conciliacao.find("tbody").append($("<tr class='" + classe + "'><td>" + icone + "</td></tr>"));
                     cont_lin++;
                 }
-                $cesta.find("tbody").append("<tr class='destaque-total'><td class='dir' colspan='3'>" + total_cesta + "</td></tr>");
-                $pagamentos.find("tbody").append("<tr class='destaque-total'><td colspan='2' class='dir'>" + total_pago + "</td></tr>");
-                icone = "<i class='material-icons icone'>" + (total_pago == total_cesta ? "done" : "cancel") + "</i>"
+                $cesta.find("tbody").append("<tr class='destaque-total'><td class='dir' colspan='3'>" + formatReal(total_cesta) + "</td></tr>");
+                $pagamentos.find("tbody").append("<tr class='destaque-total'><td colspan='2' class='dir'>" + formatReal(total_pago) + "</td></tr>");
+
+                icone = "<i class='material-icons icone "  + (total_pago == total_cesta ? "ok" : "notok") + "'>" + (total_pago == total_cesta ? "done" : "cancel") + "</i>"
                 $conciliacao.find("tbody").append("<tr class='destaque-total'><td class='ctr'>" + icone + "</td></tr>");
 
             });
@@ -223,11 +219,11 @@
                         </thead>
                         <tbody>
                             {% for reg in coag.get_registros_financeiros %}
-                                <tr>
+                                <tr class="destaque-linha">
                                     <td>{{reg.posicao|date:"d/m/Y"}}</td><td class="dir pagamentos_registro">{{reg.valor}}</td></td>
                                 </tr>
                             {% empty %}
-                                <tr><td colspan="2">Nenhum pagamento encontrado</td></tr>
+                                <tr class="destaque-linha"><td class="ctr">-</td><td class="ctr">-</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

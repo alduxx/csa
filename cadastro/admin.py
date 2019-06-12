@@ -121,8 +121,7 @@ class CoagricultorPorCicloAdmin(admin.ModelAdmin):
     list_display = ['coagricultor', 'ciclo']
     ordering = ['ciclo','coagricultor__nome']
     list_filter = ['ciclo',]
-
-    # inlines = [CestaDoMesInline]
+    inlines = [CestaDoMesInline]
 
 class CoagricultorAdmin(admin.ModelAdmin):
     model = Coagricultor
