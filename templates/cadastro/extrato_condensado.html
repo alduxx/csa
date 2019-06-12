@@ -87,7 +87,7 @@
                 if( _pgtos ){
                     _regs = _pgtos.registros;
                     for(i=0; i < _regs.length; i++){
-                        $(this).find("td:eq(" + (i+2) + ")").removeClass("devedor").addClass("pago")
+                        $(this).find("td:eq(" + (i+2) + ")").removeClass("devedor").addClass("pago").attr("title", _regs[i].posicao);
                     }
                 }
             })
@@ -127,7 +127,7 @@
                 <thead>
                     <tr>
                         <th colspan="2" style="background-color:transparent;">&nbsp;</th>
-                        <th colspan="6" class="ctr">Cestas</th>
+                        <th colspan="6" class="ctr">Mês</th>
                     </tr>
                     <tr>
                         <th class="ctr">Id</th>
