@@ -142,6 +142,7 @@
         };
 
         function destaca(botao, limparTodos=false) {
+            $("a#todos").removeClass("selecionado"); // Limpa o todos
             if(limparTodos){
                 $("a.selecionado").removeClass("selecionado");
             } else {
@@ -149,6 +150,24 @@
             }
 
             botao.addClass("selecionado");
+        }
+
+        function atualizaMensagemStatus(pgt, pto){
+            var mensagem = "Mostrando";
+            if(pgt.length==0 && pto.length==0){
+                mensagem += " todos os coagricultores."
+            }
+            if(pgt.length > 0) {
+                mensagem += " agricultores com saldo " + $(pgt[0]).text().toLowerCase().replace('vos', 'vo');
+            }
+            if(pgt.length > 0 && pto.length > 0){
+                mensagem += " e "
+            }
+            if(pto.length > 0) {
+                mensagem += " do ponto de convivência " + $(pto[0]).text();
+            }
+
+            $(".status_filtro").text(mensagem);
         }
 
         function aplicaFiltros(){
@@ -162,6 +181,7 @@
                 filtraPorPontoConvivencia($(pto[0]).text());
             }
 
+            atualizaMensagemStatus(pgt, pto);
         }
 
         $(document).ready(function(){
