@@ -46,7 +46,7 @@ class Cesta(models.Model):
 
     def __str__(self):
         return (f"""{self.coagricultor.coagricultor.nome} -
-                {self.coagricultor.ciclo.nome} - versão {self.versao}""")
+                    {self.coagricultor.ciclo.nome} - versão {self.versao}""")
 
     @property
     def coagricultor_nome(self):

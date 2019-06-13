@@ -7,7 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
     <meta name="robots" content="NONE,NOARCHIVE">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.js"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" -->
 
     <style media="screen">
     /*@media only screen and (max-width: 600px) {
@@ -15,7 +15,15 @@
     }*/
 
     .dashboard #content {width: 100%;}
+
+    #filtros > div {float:left;margin-right: 30px;}
+    #filtros a {font-size: 0.66em;}
+
     ul.object-tools {float:none;position:relative;margin-top:0;clear:both;}
+    .object-tools a:link {padding: 2px 8px !important;}
+
+    .object-tools a:visited.selecionado,
+    .object-tools a:link.selecionado {background-color: rgb(65, 118, 144);}
 
     .status_filtro {font-size: 0.8em;color: #555;padding-top: 1.33em;padding-left: 0.5em;clear: both;}
     .status_filtro .pos {color: blue;}
@@ -32,8 +40,8 @@
     .ok {color: green;}
     .notok {color: red;}
 
-    .pago {background-color: #d9ffd1;color: #027c25; }
-    .devedor {background-color: #fccccc;color: #8c0909; }
+    .pago {background-color: rgb(217, 255, 209);color: #027c25; }
+    .devedor {background-color: rgb(252, 204, 204); color: #8c0909; }
 
     </style>
 
@@ -74,12 +82,13 @@
             }
         }
 
-
-        $(document).ready(function(){
+        function coloreColunas(){
+            // Marca todas as colunas dos meses anteriores como devedoras
             for(m = 0; m < QTDE_MESES; m++){
                 $("#tbl_cestas tbody tr").find("td:eq(" + (m+2) + ")").addClass("devedor");
             }
 
+            // E depois remarcas as pagas como pagas
             $("#tbl_cestas tbody tr").each(function(){
                 _id = parseInt( $(this).find("td:first-child").text() );
                 _pgtos = getCoagFromPgtos(_id);
@@ -91,7 +100,90 @@
                     }
                 }
             })
+        }
+
+        function filtraColuna(posColuna, valor, comparador, somenteVisiveis=false){
+            $("#tbl_cestas tbody tr").each(function(){
+                var expressao;
+                if(comparador == "text"){
+                    expressao = $(this).find("td:eq(" + posColuna + ")").text();
+                } else if (comparador == "background-color") {
+                    expressao = $(this).find("td:eq(" + posColuna + ")").css('backgroundColor');
+                }
+
+                if(somenteVisiveis){
+                    if($(this).is(":visible")){
+                        if(expressao == valor){
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    }
+                } else {
+                    if(expressao == valor){
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                }
+            });
+        }
+
+        function limpaFiltros(){
+            $("#tbl_cestas tbody tr").show();
+        }
+
+        function filtraPorPagamento(cor){
+            filtraColuna(QTDE_MESES+1, cor, "background-color");
+        };
+
+        function filtraPorPontoConvivencia(ponto){
+            filtraColuna(8, ponto, "text", true);
+        };
+
+        function destaca(botao, limparTodos=false) {
+            if(limparTodos){
+                $("a.selecionado").removeClass("selecionado");
+            } else {
+                botao.parent().parent().find("a.selecionado").removeClass("selecionado");
+            }
+
+            botao.addClass("selecionado");
+        }
+
+        function aplicaFiltros(){
+            var pgt = $("#filtro_pgt").find("a.selecionado");
+            var pto = $("#filtro_pto").find("a.selecionado");
+
+            if(pgt.length) {
+                filtraPorPagamento($(pgt[0]).attr("cor"));
+            }
+            if(pto.length) {
+                filtraPorPontoConvivencia($(pto[0]).text());
+            }
+
+        }
+
+        $(document).ready(function(){
+            coloreColunas();
+
+            $("div.filtro a").click(function(){
+                var divPai = $(this).parent().parent().parent();
+
+                if(divPai.attr("id")=="filtro_todos"){
+                    limpaFiltros();
+                    destaca($(this), true);
+                } else if (divPai.attr("id")=="filtro_pgt") {
+                    destaca($(this));
+                } else if (divPai.attr("id")=="filtro_pto") {
+                    destaca($(this));
+                }
+
+                aplicaFiltros();
+
+            });
         });
+
     </script>
 </head>
 
@@ -111,12 +203,28 @@
         <div>
             <h1>Extrato - {{ciclo_atual}} - {{hoje|date:'F/Y'}}</h1>
 
-            <div class="filtros" style="display:none;">
-                <ul class="object-tools">
-                    <li><a href="#" id="todos" class="historylink">Todos</a></li>
-                    <li><a href="#" id="negativos" class="historylink">Negativos</a></li>
-                    <li><a href="#" id="positivos" class="historylink">Positivos</a></li>
-                </ul>
+            <div id="filtros">
+                <div id="filtro_todos" class="filtro">
+                    <ul class="object-tools">
+                        <li><a href="#" id="todos" class="historylink">Todos</a></li>
+                    </ul>
+                </div>
+
+                <div id="filtro_pgt" class="filtro">
+                    <ul class="object-tools">
+                        <li><a href="#" id="negativos" class="historylink" cor="rgb(252, 204, 204)">Negativos</a></li>
+                        <li><a href="#" id="positivos" class="historylink" cor="rgb(217, 255, 209)">Positivos</a></li>
+                    </ul>
+                </div>
+
+                <div id="filtro_pto" class="filtro">
+                    <ul class="object-tools">
+                        <li><a href="#" id="girassol" class="historylink">Restaurante Girassol</a></li>
+                        <li><a href="#" id="fepecs" class="historylink">Fepecs</a></li>
+                        <li><a href="#" id="lago" class="historylink">Lago Sul</a></li>
+                        <li><a href="#" id="santa" class="historylink">Santa Mônica</a></li>
+                    </ul>
+                </div>
 
                 <div class="status_filtro">
                     Mostrando todos os coagricultores
@@ -138,6 +246,7 @@
                         <th class="ctr">8</th>
                         <th class="ctr">9</th>
                         <th class="ctr">10</th>
+                        <th class="ctr">Ponto Convivência</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -146,8 +255,9 @@
                         <td class="ctr">{{ coag.coagricultor.identificador }}</td>
                         <td class="esq">{{ coag.coagricultor.nome }}</td>
                         {% for cesta_do_mes in coag.get_itens.all %}
-                            <td class="dir">R$ {{cesta_do_mes.cesta.valor_total}}</td>
+                            <td class="ctr">R$ {{cesta_do_mes.cesta.valor_total}}</td>
                         {% endfor %}
+                        <td class="ctr">{{ coag.ponto_de_convivencia.ponto_convivencia.nome }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
