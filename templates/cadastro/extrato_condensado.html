@@ -137,8 +137,8 @@
             filtraColuna(QTDE_MESES+1, cor, "background-color");
         };
 
-        function filtraPorPontoConvivencia(ponto){
-            filtraColuna(8, ponto, "text", true);
+        function filtraPorPontoConvivencia(ponto, filtraVisiveis=false){
+            filtraColuna(8, ponto, "text", filtraVisiveis);
         };
 
         function destaca(botao, limparTodos=false) {
@@ -174,12 +174,17 @@
             var pgt = $("#filtro_pgt").find("a.selecionado");
             var pto = $("#filtro_pto").find("a.selecionado");
 
-            if(pgt.length) {
+            if(pgt.length > 0) {
                 filtraPorPagamento($(pgt[0]).attr("cor"));
             }
-            if(pto.length) {
-                filtraPorPontoConvivencia($(pto[0]).text());
+            if(pto.length > 0) {
+                if(pgt.length == 0) {
+                    filtraPorPontoConvivencia($(pto[0]).text(), false);
+                } else {
+                    filtraPorPontoConvivencia($(pto[0]).text(), true);
+                }
             }
+            console.log(pgt.length, pto.length)
 
             atualizaMensagemStatus(pgt, pto);
         }
